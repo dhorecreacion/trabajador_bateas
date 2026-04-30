@@ -761,6 +761,48 @@ td {
 }
 
 /* ══════════════════════════════════
+   GESTIONAR PERSONAL
+══════════════════════════════════ */
+#btnOpenPersonal {
+  background: transparent;
+  color: var(--blue-dk);
+  border: 1px solid rgba(87, 162, 215, 0.35);
+}
+
+#btnOpenPersonal:hover {
+  background: var(--blue-lt);
+}
+
+#btnOpenUpload{
+  display: none;
+}
+
+.section-label {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--blue-dk);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.personal-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.personal-form-full {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 480px) {
+  .personal-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ══════════════════════════════════
    FOOTER
 ══════════════════════════════════ */
 footer {

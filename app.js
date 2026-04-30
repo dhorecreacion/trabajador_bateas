@@ -3,14 +3,14 @@ import { getDatabase, ref, onValue, set, update, remove } from 'https://www.gsta
 
 /* ── Firebase ── */
 const firebaseConfig = {
-  apiKey:            'AIzaSyBS6Wia1ZPWO0Ontk-m2hu7yOAP13cHjIc',
-  authDomain:        'entrega-cumple.firebaseapp.com',
-  databaseURL:       'https://entrega-cumple-default-rtdb.firebaseio.com',
-  projectId:         'entrega-cumple',
-  storageBucket:     'entrega-cumple.firebasestorage.app',
-  messagingSenderId: '169986916222',
-  appId:             '1:169986916222:web:f632e82225c59e8659fd2f',
-};
+    apiKey: "AIzaSyA3aOSYvAd-UuETV1K2Wgw6CnZK16nDp2U",
+    authDomain: "trabajador-bateas.firebaseapp.com",
+    databaseURL: "https://trabajador-bateas-default-rtdb.firebaseio.com",
+    projectId: "trabajador-bateas",
+    storageBucket: "trabajador-bateas.firebasestorage.app",
+    messagingSenderId: "193278652870",
+    appId: "1:193278652870:web:24a29d24ca907ea182c2c7"
+  };
 
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
@@ -774,6 +774,7 @@ onValue(ref(db, 'Personal'), snap => {
   refreshMeta();
   searchPeople();
   renderHistory();
+  if (modalPersonal.classList.contains('open')) renderPersonalList();
 }, err => {
   console.error('Error leyendo Personal:', err);
   showToast('Error leyendo Personal: ' + (err?.code || ''));
@@ -787,4 +788,194 @@ onValue(ref(db, 'Entregas'), snap => {
 }, err => {
   console.error('Error leyendo Entregas:', err);
   showToast('Error leyendo Entregas: ' + (err?.code || ''));
+});
+
+/* ══════════════════════════════════
+   MODAL GESTIONAR PERSONAL (CRUD)
+══════════════════════════════════ */
+const modalPersonal         = document.getElementById('modalPersonal');
+const btnOpenPersonal       = document.getElementById('btnOpenPersonal');
+const btnCloseModalPersonal = document.getElementById('btnCloseModalPersonal');
+const btnAddPerson          = document.getElementById('btnAddPerson');
+const addPersonStatus       = document.getElementById('addPersonStatus');
+const qPersonal             = document.getElementById('qPersonal');
+const personalList          = document.getElementById('personalList');
+const pDni                  = document.getElementById('pDni');
+const pNombre               = document.getElementById('pNombre');
+const pPlanilla             = document.getElementById('pPlanilla');
+const pSexo                 = document.getElementById('pSexo');
+const pTallas               = document.getElementById('pTallas');
+const pSede                 = document.getElementById('pSede');
+const pCumple               = document.getElementById('pCumple');
+
+function openModalPersonal() {
+  modalPersonal.classList.add('open');
+  renderPersonalList();
+}
+
+function closeModalPersonal() {
+  modalPersonal.classList.remove('open');
+}
+
+function renderPersonalList() {
+  const q = norm(qPersonal.value);
+  const filtered = people.filter(p =>
+    !q || `${p.dni} ${p.apellidos_nombres}`.toLowerCase().includes(q)
+  );
+
+  if (!filtered.length) {
+    personalList.innerHTML = '<p style="padding:12px; color:var(--muted); font-size:0.8rem; margin:0;">Sin resultados.</p>';
+    return;
+  }
+
+  personalList.innerHTML = filtered.map(p => `
+    <div class="rowitem">
+      <div class="who">
+        <strong>${escapeHtml(p.apellidos_nombres || '(sin nombre)')}</strong>
+        <span>${escapeHtml(p.planilla || '-')} &middot; ${escapeHtml(p.sede || '-')}</span>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+        <span class="mono">${escapeHtml(p.dni)}</span>
+        <button class="btn" style="min-height:34px; padding:5px 10px; font-size:0.76rem;" data-edit="${escapeHtml(p.dni)}">Editar</button>
+        <button class="btn danger" style="min-height:34px; padding:5px 10px; font-size:0.76rem;" data-del="${escapeHtml(p.dni)}">Eliminar</button>
+      </div>
+    </div>
+  `).join('');
+
+  personalList.querySelectorAll('button[data-edit]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const p = people.find(x => x.dni === btn.getAttribute('data-edit'));
+      if (p) openEditPersonModal(p);
+    });
+  });
+
+  personalList.querySelectorAll('button[data-del]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const dni = btn.getAttribute('data-del');
+      const p   = people.find(x => x.dni === dni);
+      if (!confirm(`¿Eliminar a ${p?.apellidos_nombres || dni} (DNI: ${dni}) del personal?\nEsta acción no se puede deshacer.`)) return;
+      try {
+        await remove(ref(db, `Personal/${dni}`));
+        showToast(`Persona ${dni} eliminada del personal.`);
+      } catch (err) {
+        console.error(err);
+        showToast('Error al eliminar: ' + (err?.message || err?.code || ''));
+      }
+    });
+  });
+}
+
+btnOpenPersonal.addEventListener('click', openModalPersonal);
+
+btnCloseModalPersonal.addEventListener('click', closeModalPersonal);
+modalPersonal.addEventListener('click', e => { if (e.target === modalPersonal) closeModalPersonal(); });
+qPersonal.addEventListener('input', renderPersonalList);
+
+/* ── Modal editar persona ── */
+const modalEditPerson   = document.getElementById('modalEditPerson');
+const btnCloseEditPerson = document.getElementById('btnCloseEditPerson');
+const btnCancelEdit     = document.getElementById('btnCancelEdit');
+const btnSaveEdit       = document.getElementById('btnSaveEdit');
+const editDniLabel      = document.getElementById('editDniLabel');
+const editPersonStatus  = document.getElementById('editPersonStatus');
+const eName     = document.getElementById('eName');
+const ePlanilla = document.getElementById('ePlanilla');
+const eSexo     = document.getElementById('eSexo');
+const eTallas   = document.getElementById('eTallas');
+const eSede     = document.getElementById('eSede');
+const eCumple   = document.getElementById('eCumple');
+
+let editingDni = null;
+
+function openEditPersonModal(p) {
+  editingDni               = p.dni;
+  editDniLabel.textContent = p.dni;
+  eName.value              = p.apellidos_nombres;
+  eTallas.value            = p.tallas;
+  eCumple.value            = p.cumpleanos;
+  editPersonStatus.textContent = '';
+  setSelectValue(ePlanilla, p.planilla);
+  setSelectValue(eSexo,     p.sexo);
+  setSelectValue(eSede,     p.sede);
+  modalEditPerson.classList.add('open');
+}
+
+function setSelectValue(sel, val) {
+  const match = Array.from(sel.options).find(o => o.value === val || o.text === val);
+  sel.value = match ? match.value : '';
+}
+
+function closeEditPersonModal() {
+  modalEditPerson.classList.remove('open');
+  editingDni = null;
+}
+
+btnCloseEditPerson.addEventListener('click', closeEditPersonModal);
+btnCancelEdit.addEventListener('click', closeEditPersonModal);
+modalEditPerson.addEventListener('click', e => { if (e.target === modalEditPerson) closeEditPersonModal(); });
+
+btnSaveEdit.addEventListener('click', async () => {
+  if (!editingDni) return;
+  const nombre = eName.value.trim();
+  if (!nombre) { editPersonStatus.textContent = '⚠ El nombre es obligatorio.'; return; }
+
+  btnSaveEdit.disabled = true;
+  editPersonStatus.textContent = 'Guardando...';
+  try {
+    const record = {
+      APELLIDOS_NOMBRES: nombre,
+      PLANILLA:          ePlanilla.value.trim(),
+      SEXO:              eSexo.value.trim(),
+      TALLAS:            eTallas.value.trim(),
+      SEDE:              eSede.value.trim(),
+    };
+    const cumple = eCumple.value.trim();
+    if (cumple) record.CUMPLEANOS = cumple;
+
+    await set(ref(db, `Personal/${editingDni}`), record);
+    editPersonStatus.textContent = '✅ Guardado correctamente.';
+    setTimeout(closeEditPersonModal, 900);
+    showToast(`DNI ${editingDni} actualizado.`);
+  } catch (err) {
+    console.error(err);
+    editPersonStatus.textContent = '⚠ Error: ' + (err?.message || err?.code || '');
+  } finally {
+    btnSaveEdit.disabled = false;
+  }
+});
+
+btnAddPerson.addEventListener('click', async () => {
+  const dni    = pDni.value.trim();
+  const nombre = pNombre.value.trim();
+
+  addPersonStatus.textContent = '';
+  if (!dni)    { addPersonStatus.textContent = '⚠ El DNI es obligatorio.'; return; }
+  if (!nombre) { addPersonStatus.textContent = '⚠ El nombre es obligatorio.'; return; }
+  if (people.find(p => p.dni === dni)) {
+    addPersonStatus.textContent = `⚠ DNI ${dni} ya existe en el personal.`;
+    return;
+  }
+
+  btnAddPerson.disabled = true;
+  addPersonStatus.textContent = 'Guardando...';
+  try {
+    const record = {
+      APELLIDOS_NOMBRES: nombre,
+      PLANILLA:          pPlanilla.value.trim(),
+      SEXO:              pSexo.value.trim(),
+      TALLAS:            pTallas.value.trim(),
+      SEDE:              pSede.value.trim(),
+    };
+    const cumple = pCumple.value.trim();
+    if (cumple) record.CUMPLEANOS = cumple;
+
+    await set(ref(db, `Personal/${dni}`), record);
+    addPersonStatus.textContent = `✅ DNI ${dni} agregado correctamente.`;
+    pDni.value = pNombre.value = pPlanilla.value = pSexo.value = pTallas.value = pSede.value = pCumple.value = '';
+  } catch (err) {
+    console.error(err);
+    addPersonStatus.textContent = '⚠ Error al guardar: ' + (err?.message || err?.code || '');
+  } finally {
+    btnAddPerson.disabled = false;
+  }
 });

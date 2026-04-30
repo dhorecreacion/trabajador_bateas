@@ -23,8 +23,8 @@
           </div>
           <div class="brand-divider"></div>
           <div class="brand-text">
-            <h1>Confirmación de entrega</h1>
-            <p>Entrega de cumpleaños</p>
+            <h1>Día del Trabajador</h1>
+            <p>Entrega de Presente</p>
           </div>
         </div>
 
@@ -37,7 +37,8 @@
 
       <div class="header-actions" id="headerActions">
         <button id="btnOpenUpload">Cargar Plantilla</button>
-        <button id="btnExportXlsx">Excel (.xlsx)</button>
+        <button id="btnOpenPersonal">Gestionar Personal</button>
+        <button id="btnExportXlsx">Excel (.xlsx)</button> 
         <button id="btnReload">Recargar</button>
       </div>
 
@@ -240,6 +241,105 @@
       <canvas id="sigViewCanvas" width="440" height="180"></canvas>
       <div style="margin-top:12px; display:flex; justify-content:flex-end;">
         <button class="btn" id="btnCloseModalFirma2">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       MODAL: Gestionar Personal
+  ══════════════════════════════════ -->
+  <div id="modalPersonal" class="modal-overlay">
+    <div class="modal-box">
+
+      <div class="modal-head">
+        <h2>Gestionar Personal</h2>
+        <button class="btn" id="btnCloseModalPersonal" style="padding:6px 10px;">&#10005;</button>
+      </div>
+
+      <!-- Agregar persona -->
+      <p class="section-label">Agregar persona</p>
+      <div class="personal-form-grid">
+        <input id="pDni"    placeholder="DNI *" />
+        <input id="pNombre" placeholder="Apellidos y Nombres *" />
+        <select id="pPlanilla">
+          <option value="">-- Planilla --</option>
+          <option>PLANILLA DE EJECUTIVOS</option>
+          <option>PLANILLA DE EMPLEADOS</option>
+          <option>PLANILLA DE PRACTICANTES</option>
+          <option>PLANILLA DE OBREROS</option>
+        </select>
+        <select id="pSexo">
+          <option value="">-- Sexo --</option>
+          <option value="M">M</option>
+          <option value="F">F</option>
+        </select>
+        <input id="pTallas" placeholder="Tallas" />
+        <select id="pSede">
+          <option value="">-- Sede --</option>
+          <option>LIMA</option>
+          <option>CAYLLOMA</option>
+          <option>AREQUIPA</option>
+        </select>
+        <input id="pCumple" placeholder="Cumpleaños (dd/mm/aaaa)" class="personal-form-full" />
+      </div>
+      <div style="margin-top:10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <button class="btn primary" id="btnAddPerson">Agregar a Firebase</button>
+        <span id="addPersonStatus" style="font-size:0.78rem; color:var(--muted);"></span>
+      </div>
+
+      <hr style="border:none; border-top:1px solid var(--border); margin:18px 0 14px;" />
+
+      <!-- Lista: editar / eliminar -->
+      <p class="section-label">Editar / Eliminar persona</p>
+      <input id="qPersonal" placeholder="Buscar por DNI o nombre..." style="margin-bottom:8px;" />
+      <div id="personalList" style="max-height:280px; overflow-y:auto; border:1px solid var(--border); border-radius:10px;"></div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       MODAL: Editar Persona
+  ══════════════════════════════════ -->
+  <div id="modalEditPerson" class="modal-overlay">
+    <div class="modal-box" style="max-width:500px;">
+      <div class="modal-head">
+        <h2>Editar persona</h2>
+        <button class="btn" id="btnCloseEditPerson" style="padding:6px 10px;">&#10005;</button>
+      </div>
+
+      <p style="font-size:0.78rem; color:var(--muted); margin:0 0 10px;">
+        DNI: <b id="editDniLabel" style="color:var(--text); font-family:var(--mono);"></b>
+        <span style="font-size:0.72rem;">(no editable)</span>
+      </p>
+
+      <div class="personal-form-grid">
+        <input id="eName" placeholder="Apellidos y Nombres *" class="personal-form-full" />
+        <select id="ePlanilla">
+          <option value="">-- Planilla --</option>
+          <option>PLANILLA DE EJECUTIVOS</option>
+          <option>PLANILLA DE EMPLEADOS</option>
+          <option>PLANILLA DE PRACTICANTES</option>
+          <option>PLANILLA DE OBREROS</option>
+        </select>
+        <select id="eSexo">
+          <option value="">-- Sexo --</option>
+          <option value="M">M</option>
+          <option value="F">F</option>
+        </select>
+        <input id="eTallas" placeholder="Tallas" />
+        <select id="eSede">
+          <option value="">-- Sede --</option>
+          <option>LIMA</option>
+          <option>CAYLLOMA</option>
+          <option>AREQUIPA</option>
+        </select>
+        <input id="eCumple" placeholder="Cumpleaños (dd/mm/aaaa)" />
+      </div>
+
+      <div style="margin-top:14px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <button class="btn primary" id="btnSaveEdit">Guardar cambios</button>
+        <button class="btn"         id="btnCancelEdit">Cancelar</button>
+        <span id="editPersonStatus" style="font-size:0.78rem; color:var(--muted);"></span>
       </div>
     </div>
   </div>
