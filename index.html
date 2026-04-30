@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Confirmación de Entrega · Cumpleaños</title>
+  <link rel="stylesheet" href="estilos.css" />
+</head>
+
+<body>
+
+  <!-- ══════════════════════════════════
+       HEADER
+  ══════════════════════════════════ -->
+  <header class="site-header">
+    <div class="header-inner">
+
+      <div class="header-top-row">
+        <div class="brand">
+          <div class="header-logos">
+            <img src="logo-bateas.png" alt="Bateas" />
+            <img src="logo-dho.png"    alt="DHO" />
+          </div>
+          <div class="brand-divider"></div>
+          <div class="brand-text">
+            <h1>Confirmación de entrega</h1>
+            <p>Entrega de cumpleaños</p>
+          </div>
+        </div>
+
+        <button class="hamburger" id="btnHamburger" aria-label="Menú" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+
+      <div class="header-actions" id="headerActions">
+        <button id="btnOpenUpload">Cargar Plantilla</button>
+        <button id="btnExportXlsx">Excel (.xlsx)</button>
+        <button id="btnReload">Recargar</button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════
+       CONTENIDO PRINCIPAL
+  ══════════════════════════════════ -->
+  <main class="wrap">
+
+    <!-- Pendientes -->
+    <section class="card">
+      <div class="cardhead">
+        <h2>Pendientes</h2>
+        <div class="meta" id="peopleMeta">0</div>
+      </div>
+
+      <label for="q">Buscar (DNI / apellidos y nombres)</label>
+      <input id="q" placeholder="Ej: 73451234 / García López..." />
+
+      <div class="filters-grid">
+        <select id="sedeFilter">
+          <option value="">Todas las sedes</option>
+        </select>
+        <select id="planillaFilter">
+          <option value="">Todas las planillas</option>
+        </select>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+        <select id="limit" style="width:80px;">
+          <option value="15">15</option>
+          <option value="25" selected>25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+      </div>
+
+      <div class="results">
+        <div class="list" id="results"></div>
+      </div>
+
+      <div class="toast" id="toast"></div>
+    </section>
+
+    <!-- Historial -->
+    <section class="card" style="margin-top:18px;">
+      <div class="cardhead">
+        <h2>Historial de entregas</h2>
+        <div class="meta" id="delMeta">0 entregas</div>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>DNI</th>
+              <th>Apellidos y Nombres</th>
+              <th>Planilla</th>
+              <th>Sede</th>
+              <th>Talla</th>
+              <th>Cumpleaños</th>
+              <th>Ítem</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="hist"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ══════════════════════════════════
+       MODAL: Confirmar Entrega
+  ══════════════════════════════════ -->
+  <div id="modalConfirm" class="modal-overlay">
+    <div class="modal-box">
+
+      <div class="modal-head">
+        <h2>Confirmar entrega</h2>
+        <button class="btn" id="btnCloseModalConfirm" style="padding:6px 10px;">&#10005;</button>
+      </div>
+
+      <div id="selectedPill" class="pill" style="display:none"></div>
+      <div id="selectedHint" style="font-size:12px; color:var(--muted); margin-top:6px;">
+        Selecciona una persona.
+      </div>
+
+      <label style="margin-top:14px;">Firma del receptor</label>
+      <div class="sig-wrap" id="sigWrap">
+        <canvas id="sigCanvas"></canvas>
+        <span class="sig-hint" id="sigHint">Firme aquí</span>
+        <div class="sig-actions">
+          <button class="btn" id="btnClearSig" style="padding:4px 10px; font-size:11px;">
+            Borrar firma
+          </button>
+        </div>
+      </div>
+
+      <div class="confirm-actions" style="margin-top:14px;">
+        <button class="btn primary" id="btnConfirm">Confirmar Entrega</button>
+        <button class="btn"         id="btnClearSel">Cancelar</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       MODAL: Cargar Plantilla
+  ══════════════════════════════════ -->
+  <div id="modalUpload" class="modal-overlay">
+    <div class="modal-box">
+
+      <div class="modal-head">
+        <h2>Cargar nueva plantilla</h2>
+        <button class="btn" id="btnCloseModal" style="padding:6px 10px;">&#10005;</button>
+      </div>
+
+      <!-- Paso 1 -->
+      <div style="margin-bottom:16px;">
+        <label style="margin-bottom:0;">
+          <span class="step-num">1</span>Selecciona el archivo
+        </label>
+        <div class="upload-drop" id="uploadDrop">
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.json" />
+          <div class="di">&#128194;</div>
+          <strong>Arrastra un archivo aquí</strong>
+          <p>
+            o <span id="browseLink" style="color:var(--blue); cursor:pointer; text-decoration:underline;">
+              busca en tu equipo
+            </span>
+          </p>
+          <p style="margin-top:4px; font-size:11px;">
+            Formatos aceptados: .xlsx &middot; .xls &middot; .json
+          </p>
+        </div>
+        <div id="fileNameBadge" style="display:none; margin-top:8px; font-size:12px; color:var(--muted);"></div>
+      </div>
+
+      <!-- Paso 2 -->
+      <div style="margin-bottom:16px;">
+        <label><span class="step-num">2</span>Nombre de tabla a importar</label>
+        <input id="nodeNameInput" value="Personal" placeholder="Ej: Personal, Materiales, Herramientas" />
+        <p style="font-size:11px; color:var(--muted); margin:5px 0 0;">
+          Los datos se guardarán en <b>/<span id="nodeNamePreview">Personal</span></b>
+        </p>
+      </div>
+
+      <!-- Paso 3 -->
+      <div id="previewSection" style="display:none; margin-bottom:16px;">
+        <label style="margin-bottom:0;">
+          <span class="step-num">3</span>Vista previa
+          <span id="previewMeta" style="font-weight:400; color:var(--muted);"></span>
+        </label>
+        <div class="preview-wrap">
+          <table>
+            <thead><tr id="previewHead"></tr></thead>
+            <tbody id="previewBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Opciones -->
+      <div id="uploadOptions" style="display:none; border-top:1px solid var(--border); padding-top:12px; margin-bottom:16px;">
+        <div class="opt-row">
+          <input type="checkbox" id="mergeOpt" checked />
+          <label for="mergeOpt">
+            <b>Agregar / fusionar</b> — solo agrega registros nuevos y actualiza los existentes sin borrar ninguno
+          </label>
+        </div>
+        <div class="opt-row" style="margin-top:6px;">
+          <input type="checkbox" id="clearEntregasOpt" />
+          <label for="clearEntregasOpt">
+            Limpiar también <b>/Entregas</b> (inicio de campaña nueva)
+          </label>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn primary" id="btnUpload" disabled>Cargar a Firebase</button>
+        <button class="btn"         id="btnCancelUpload">Cancelar</button>
+      </div>
+      <div class="upload-status" id="uploadStatus"></div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       MODAL: Ver Firma
+  ══════════════════════════════════ -->
+  <div id="modalFirma" class="modal-overlay">
+    <div class="modal-sig-box">
+      <div class="modal-head">
+        <h2 id="modalFirmaTitulo">Firma de —</h2>
+        <button class="btn" id="btnCloseModalFirma" style="padding:6px 10px;">&#10005;</button>
+      </div>
+      <canvas id="sigViewCanvas" width="440" height="180"></canvas>
+      <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+        <button class="btn" id="btnCloseModalFirma2">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       FOOTER
+  ══════════════════════════════════ -->
+  <footer>
+    <span>
+      &copy; 2026 Calidad de Vida &mdash;
+      Direcci&oacute;n de Desarrollo Humano y Organizacional.
+      Todos los derechos reservados.
+    </span>
+  </footer>
+
+  <!-- Dependencias externas -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Lógica de la aplicación -->
+  <script type="module" src="app.js"></script>
+
+</body>
+</html>
