@@ -793,20 +793,28 @@ onValue(ref(db, 'Entregas'), snap => {
 /* ══════════════════════════════════
    MODAL GESTIONAR PERSONAL (CRUD)
 ══════════════════════════════════ */
-const modalPersonal         = document.getElementById('modalPersonal');
-const btnOpenPersonal       = document.getElementById('btnOpenPersonal');
-const btnCloseModalPersonal = document.getElementById('btnCloseModalPersonal');
-const btnAddPerson          = document.getElementById('btnAddPerson');
-const addPersonStatus       = document.getElementById('addPersonStatus');
-const qPersonal             = document.getElementById('qPersonal');
-const personalList          = document.getElementById('personalList');
-const pDni                  = document.getElementById('pDni');
-const pNombre               = document.getElementById('pNombre');
-const pPlanilla             = document.getElementById('pPlanilla');
-const pSexo                 = document.getElementById('pSexo');
-const pTallas               = document.getElementById('pTallas');
-const pSede                 = document.getElementById('pSede');
-const pCumple               = document.getElementById('pCumple');
+const modalPersonal              = document.getElementById('modalPersonal');
+const btnOpenPersonal            = document.getElementById('btnOpenPersonal');
+const btnCloseModalPersonal      = document.getElementById('btnCloseModalPersonal');
+const btnAddPerson               = document.getElementById('btnAddPerson');
+const addPersonStatus            = document.getElementById('addPersonStatus');
+const qPersonal                  = document.getElementById('qPersonal');
+const filterPersonalPlanilla     = document.getElementById('filterPersonalPlanilla');
+const filterPersonalSede         = document.getElementById('filterPersonalSede');
+const personalListCount          = document.getElementById('personalListCount');
+const btnClearPersonalFilters    = document.getElementById('btnClearPersonalFilters');
+const personalList               = document.getElementById('personalList');
+const bulkBar                    = document.getElementById('bulkBar');
+const chkSelectAll               = document.getElementById('chkSelectAll');
+const selectedCount              = document.getElementById('selectedCount');
+const btnDeleteSelected          = document.getElementById('btnDeleteSelected');
+const pDni                       = document.getElementById('pDni');
+const pNombre                    = document.getElementById('pNombre');
+const pPlanilla                  = document.getElementById('pPlanilla');
+const pSexo                      = document.getElementById('pSexo');
+const pTallas                    = document.getElementById('pTallas');
+const pSede                      = document.getElementById('pSede');
+const pCumple                    = document.getElementById('pCumple');
 
 function openModalPersonal() {
   modalPersonal.classList.add('open');
@@ -817,20 +825,47 @@ function closeModalPersonal() {
   modalPersonal.classList.remove('open');
 }
 
+let selectedDnis = new Set();
+
+function getFilteredPersonal() {
+  const q    = norm(qPersonal.value);
+  const plan = filterPersonalPlanilla.value;
+  const sede = filterPersonalSede.value;
+  return people.filter(p => {
+    if (q    && !`${p.dni} ${p.apellidos_nombres}`.toLowerCase().includes(q)) return false;
+    if (plan && p.planilla !== plan) return false;
+    if (sede && p.sede    !== sede)  return false;
+    return true;
+  });
+}
+
+function updateBulkBar(filtered) {
+  const count = selectedDnis.size;
+  bulkBar.style.display       = filtered.length ? 'flex' : 'none';
+  selectedCount.textContent   = count ? `${count} seleccionado${count !== 1 ? 's' : ''}` : '';
+  btnDeleteSelected.disabled  = count === 0;
+  chkSelectAll.checked        = filtered.length > 0 && filtered.every(p => selectedDnis.has(p.dni));
+  chkSelectAll.indeterminate  = count > 0 && !chkSelectAll.checked;
+}
+
 function renderPersonalList() {
-  const q = norm(qPersonal.value);
-  const filtered = people.filter(p =>
-    !q || `${p.dni} ${p.apellidos_nombres}`.toLowerCase().includes(q)
-  );
+  const filtered = getFilteredPersonal();
+  personalListCount.textContent = `${filtered.length} de ${people.length}`;
 
   if (!filtered.length) {
     personalList.innerHTML = '<p style="padding:12px; color:var(--muted); font-size:0.8rem; margin:0;">Sin resultados.</p>';
+    updateBulkBar(filtered);
     return;
   }
 
   personalList.innerHTML = filtered.map(p => `
-    <div class="rowitem">
-      <div class="who">
+    <div class="rowitem${selectedDnis.has(p.dni) ? ' row-selected' : ''}">
+      <label style="display:flex; align-items:center; gap:0; margin:0; cursor:pointer; flex-shrink:0;">
+        <input type="checkbox" class="chk-row" data-dni="${escapeHtml(p.dni)}"
+          ${selectedDnis.has(p.dni) ? 'checked' : ''}
+          style="width:16px; height:16px; accent-color:var(--danger); cursor:pointer;" />
+      </label>
+      <div class="who" style="margin-left:8px;">
         <strong>${escapeHtml(p.apellidos_nombres || '(sin nombre)')}</strong>
         <span>${escapeHtml(p.planilla || '-')} &middot; ${escapeHtml(p.sede || '-')}</span>
       </div>
@@ -841,6 +876,15 @@ function renderPersonalList() {
       </div>
     </div>
   `).join('');
+
+  personalList.querySelectorAll('.chk-row').forEach(chk => {
+    chk.addEventListener('change', () => {
+      const dni = chk.getAttribute('data-dni');
+      chk.checked ? selectedDnis.add(dni) : selectedDnis.delete(dni);
+      chk.closest('.rowitem').classList.toggle('row-selected', chk.checked);
+      updateBulkBar(getFilteredPersonal());
+    });
+  });
 
   personalList.querySelectorAll('button[data-edit]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -855,14 +899,17 @@ function renderPersonalList() {
       const p   = people.find(x => x.dni === dni);
       if (!confirm(`¿Eliminar a ${p?.apellidos_nombres || dni} (DNI: ${dni}) del personal?\nEsta acción no se puede deshacer.`)) return;
       try {
+        selectedDnis.delete(dni);
         await remove(ref(db, `Personal/${dni}`));
-        showToast(`Persona ${dni} eliminada del personal.`);
+        showToast(`Persona ${dni} eliminada.`);
       } catch (err) {
         console.error(err);
         showToast('Error al eliminar: ' + (err?.message || err?.code || ''));
       }
     });
   });
+
+  updateBulkBar(filtered);
 }
 
 btnOpenPersonal.addEventListener('click', openModalPersonal);
@@ -870,6 +917,48 @@ btnOpenPersonal.addEventListener('click', openModalPersonal);
 btnCloseModalPersonal.addEventListener('click', closeModalPersonal);
 modalPersonal.addEventListener('click', e => { if (e.target === modalPersonal) closeModalPersonal(); });
 qPersonal.addEventListener('input', renderPersonalList);
+filterPersonalPlanilla.addEventListener('change', renderPersonalList);
+filterPersonalSede.addEventListener('change', renderPersonalList);
+btnClearPersonalFilters.addEventListener('click', () => {
+  qPersonal.value = '';
+  filterPersonalPlanilla.value = '';
+  filterPersonalSede.value = '';
+  renderPersonalList();
+});
+
+chkSelectAll.addEventListener('change', () => {
+  const filtered = getFilteredPersonal();
+  if (chkSelectAll.checked) {
+    filtered.forEach(p => selectedDnis.add(p.dni));
+  } else {
+    filtered.forEach(p => selectedDnis.delete(p.dni));
+  }
+  renderPersonalList();
+});
+
+btnDeleteSelected.addEventListener('click', async () => {
+  const toDelete = [...selectedDnis];
+  if (!toDelete.length) return;
+  if (!confirm(`¿Eliminar ${toDelete.length} persona${toDelete.length !== 1 ? 's' : ''} seleccionada${toDelete.length !== 1 ? 's' : ''}?\nEsta acción no se puede deshacer.`)) return;
+
+  btnDeleteSelected.disabled = true;
+  btnDeleteSelected.textContent = 'Eliminando...';
+  let errors = 0;
+  for (const dni of toDelete) {
+    try {
+      await remove(ref(db, `Personal/${dni}`));
+      selectedDnis.delete(dni);
+    } catch (err) {
+      console.error(err);
+      errors++;
+    }
+  }
+  btnDeleteSelected.textContent = 'Eliminar seleccionados';
+  showToast(errors
+    ? `Eliminados con ${errors} error(es).`
+    : `${toDelete.length} persona${toDelete.length !== 1 ? 's' : ''} eliminada${toDelete.length !== 1 ? 's' : ''}.`
+  );
+});
 
 /* ── Modal editar persona ── */
 const modalEditPerson   = document.getElementById('modalEditPerson');

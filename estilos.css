@@ -2,6 +2,7 @@
    TOKENS
 ══════════════════════════════════ */
 :root {
+  color-scheme: light;
   --blue: #57a2d7;
   --blue-dk: #3d8cc4;
   --blue-lt: #dbeef8;
@@ -773,9 +774,7 @@ td {
   background: var(--blue-lt);
 }
 
-#btnOpenUpload{
-  display: none;
-}
+
 
 .section-label {
   margin: 0 0 8px;
@@ -794,6 +793,11 @@ td {
 
 .personal-form-full {
   grid-column: 1 / -1;
+}
+
+.row-selected {
+  background: rgba(225, 29, 72, 0.06) !important;
+  border-left: 3px solid var(--danger);
 }
 
 @media (max-width: 480px) {

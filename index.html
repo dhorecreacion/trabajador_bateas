@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
   <title>Confirmación de Entrega · Cumpleaños</title>
   <link rel="stylesheet" href="estilos.css" />
 </head>
@@ -291,8 +292,38 @@
 
       <!-- Lista: editar / eliminar -->
       <p class="section-label">Editar / Eliminar persona</p>
-      <input id="qPersonal" placeholder="Buscar por DNI o nombre..." style="margin-bottom:8px;" />
-      <div id="personalList" style="max-height:280px; overflow-y:auto; border:1px solid var(--border); border-radius:10px;"></div>
+      <div class="personal-form-grid" style="margin-bottom:8px;">
+        <input id="qPersonal" placeholder="Buscar por DNI o nombre..." />
+        <select id="filterPersonalPlanilla">
+          <option value="">Todas las planillas</option>
+          <option>PLANILLA DE EJECUTIVOS</option>
+          <option>PLANILLA DE EMPLEADOS</option>
+          <option>PLANILLA DE PRACTICANTES</option>
+          <option>PLANILLA DE OBREROS</option>
+        </select>
+        <select id="filterPersonalSede">
+          <option value="">Todas las sedes</option>
+          <option>LIMA</option>
+          <option>CAYLLOMA</option>
+          <option>AREQUIPA</option>
+        </select>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span id="personalListCount" style="font-size:0.76rem; color:var(--muted); white-space:nowrap;"></span>
+          <button class="btn" id="btnClearPersonalFilters" style="min-height:36px; padding:5px 10px; font-size:0.76rem;">Limpiar</button>
+        </div>
+      </div>
+      <!-- Barra de selección múltiple -->
+      <div id="bulkBar" style="display:none; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px;">
+        <label style="margin:0; display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;">
+          <input type="checkbox" id="chkSelectAll" style="width:16px; height:16px; accent-color:var(--danger); cursor:pointer;" />
+          Seleccionar todo
+        </label>
+        <span id="selectedCount" style="font-size:0.76rem; color:var(--muted);"></span>
+        <button class="btn danger" id="btnDeleteSelected" disabled style="min-height:34px; padding:5px 12px; font-size:0.76rem; margin-left:auto;">
+          Eliminar seleccionados
+        </button>
+      </div>
+      <div id="personalList" style="max-height:260px; overflow-y:auto; border:1px solid var(--border); border-radius:10px;"></div>
 
     </div>
   </div>
