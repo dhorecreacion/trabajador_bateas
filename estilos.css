@@ -1000,3 +1000,45 @@ footer span {
     font-size: 0.82rem;
   }
 }
+
+/* ══════════════════════════════════
+   FORZAR MODO CLARO (sin importar
+   la preferencia del sistema)
+══════════════════════════════════ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: light;
+    --blue: #57a2d7;
+    --blue-dk: #3d8cc4;
+    --blue-lt: #dbeef8;
+    --gray: #afb0b4;
+    --bg: #eef2f6;
+    --panel: #ffffff;
+    --panel2: #f0f5fa;
+    --border: rgba(87, 162, 215, 0.18);
+    --text: #1a2638;
+    --muted: #7c8fa3;
+    --danger: #e11d48;
+    --ok: #0e9068;
+  }
+
+  html, body {
+    background: #eef2f6 !important;
+    color: #1a2638 !important;
+  }
+
+  input, select, textarea, button {
+    background-color: #ffffff !important;
+    color: #1a2638 !important;
+    border-color: rgba(87, 162, 215, 0.18) !important;
+  }
+
+  .site-header {
+    background: rgba(255, 255, 255, 0.95) !important;
+  }
+
+  .card, .modal-box, .modal-sig-box {
+    background: #ffffff !important;
+    color: #1a2638 !important;
+  }
+}
